@@ -4,8 +4,10 @@ package com.example.sudoku.view;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
+//Whatever
 public class GameStage extends Stage {
 
     public GameStage(){
@@ -16,6 +18,7 @@ public class GameStage extends Stage {
             scene.getStylesheets().add(getClass().getResource("/com/example/sudoku/game.css").toExternalForm());
 
             this.setTitle("Mini-proyecto 2");
+            this.getIcons().add(new Image(getClass().getResourceAsStream("/com/example/sudoku/images/favicon.png")));
             this.setScene(scene);
             this.show();
         } catch (Exception e) {

@@ -21,6 +21,12 @@ public class Sudoku {
     //Auxiliar Grid used to check if the user has a possibility of solving the puzzle with the already positioned numbers
     private ArrayList<ArrayList<Integer>> auxiliarBoard;
 
+    //String used to save information about validations
+    private String status = "";
+
+    //String used to save information about resolvability
+    private String resolvabilityStatus = "";
+
     //Constructor. It initializes the board with a 6x6 ArrayList full of 0's and the playableBoard empty.
     public Sudoku() {
         board = new ArrayList<>();
@@ -47,7 +53,6 @@ public class Sudoku {
             return true;
         }
 
-
         /*We are iterating from rows to columns. That means:
             row 0 -> Column 0,1,2,3,4,5
             row 1 -> Column 0,1,2,3,4,5
@@ -73,7 +78,10 @@ public class Sudoku {
 
                 /*Here's backtracing. We try to ubicate a number in the next cell (ArrayList(nextRow).ArrayList(nextCol)) that
                 is valid. If we can't, that means the number we put before it makes a solution impossible, so we erase it and try again.*/
-                if (fillCell(nextRow, nextCol)) return true;
+                if (fillCell(nextRow, nextCol)) {
+                    status = "";
+                    return true;
+                }
                 board.get(row).set(col, 0); // reset the slot and try again until we find a number which makes possible to ubicate a valid number in the next cell.
             }
         }
@@ -84,7 +92,7 @@ public class Sudoku {
 
     //Function that tries to solve the playable board every time the user inserts a new valid number. If the board becomes unsolvable,
     //it returns false. It works similar to the algorythm used to generate a solved board because it is practically that.
-    public boolean isSolvable(int row, int col){
+    public boolean isSolvable(int row, int col) {
         //Same algorithm as the generator
         if (row == SIZE) {
             printBoard(auxiliarBoard);
@@ -101,6 +109,7 @@ public class Sudoku {
         int nextRow = (col == SIZE - 1) ? row + 1 : row;
         int nextCol = (col == SIZE - 1) ? 0 : col + 1;
 
+        //Skip the positions that already have a number
         if (playableBoard.get(row).get(col) != 0) {
             return isSolvable(nextRow, nextCol);
         }
@@ -109,13 +118,39 @@ public class Sudoku {
             if (isValid(row, col, num, auxiliarBoard)) {
                 auxiliarBoard.get(row).set(col, num);
 
-                if (isSolvable(nextRow, nextCol)) return true;
+                if (isSolvable(nextRow, nextCol)){
+                    resolvabilityStatus = "";
+                    return true;
+                }
 
                 auxiliarBoard.get(row).set(col, 0);
             }
         }
 
+        resolvabilityStatus = "Los números actuales hacen imposible resolver el sudoku!";
         return false;
+    }
+
+    //Checks if the board is solved
+    public boolean isSolved(){
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                int value = playableBoard.get(row).get(col);
+
+                // If there's a 0, it is not solved
+                if (value == 0)
+                    return false;
+
+                // We remove it temporally so we can check using the function isValid
+                playableBoard.get(row).set(col, 0);
+                boolean isValid = isValid(row, col, value, playableBoard);
+                playableBoard.get(row).set(col, value);
+
+                if (!isValid)
+                    return false;
+            }
+        }
+        return true;
     }
 
     //Checks if the number we are trying to put in the grid[row][col] is valid.
@@ -123,11 +158,17 @@ public class Sudoku {
     //So it is required to specify which one of the boards (board or playableBoard) is going to be used
     public boolean isValid(int row, int col, int num, ArrayList<ArrayList<Integer>> boardToCheck) {
         // Check row. Self-explanatory
-        if (boardToCheck.get(row).contains(num)) return false;
+        if (boardToCheck.get(row).contains(num)){
+            status = "Mismo numero (" + String.valueOf(num) + ") en la fila!";
+            return false;
+        }
 
         // Check column. Self-explanatory
         for (int r = 0; r < SIZE; r++) {
-            if (boardToCheck.get(r).get(col) == num) return false;
+            if (boardToCheck.get(r).get(col) == num){
+                status = "Mismo numero (" + String.valueOf(num) + ") en la columna!";
+                return false;
+            }
         }
 
         // Get the starting row and column of the 2x3 block that contains the cell in the position [row][col]
@@ -146,11 +187,13 @@ public class Sudoku {
         for (int r = 0; r < BLOCK_ROWS; r++) {
             for (int c = 0; c < BLOCK_COLS; c++) {
                 if (boardToCheck.get(blockStartRow + r).get(blockStartCol + c) == num) {
+                    status = "Mismo numero (" + String.valueOf(num) + ") en el bloque!";
                     return false;
                 }
             }
         }
 
+        status = "";
         return true;
     }
 
@@ -210,6 +253,16 @@ public class Sudoku {
     //Getter
     public int getSize(){
         return SIZE;
+    }
+
+    //Getter
+    public String getStatus(){
+        return status;
+    }
+
+    //Getter
+    public String getResolvabilityStatus(){
+        return resolvabilityStatus;
     }
 
     //This just prints the sudoku in the terminal (For debug purposses)

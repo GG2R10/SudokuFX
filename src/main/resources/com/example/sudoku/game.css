@@ -1,0 +1,27 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #dcdcdc); /* placeholder, cámbialo si quieres imagen */
+    -fx-padding: 20px;
+    -fx-background-image: url("/path/a/tu/imagen.jpg");
+    -fx-background-size: cover; /* o contain, según prefieras */
+    -fx-background-position: center center;
+}
+
+.sudoku-grid {
+    -fx-hgap: 3px;
+    -fx-vgap: 3px;
+}
+
+.sudoku-cell {
+    -fx-pref-width: 60px;
+    -fx-pref-height: 60px;
+    -fx-font-size: 18px;
+    -fx-alignment: center;
+    -fx-border-color: #aaa;
+    -fx-border-width: 1px;
+    -fx-background-color: #fff;
+}
+
+.sudoku-cell:focused {
+    -fx-border-color: #2196F3;
+    -fx-border-width: 2px;
+}

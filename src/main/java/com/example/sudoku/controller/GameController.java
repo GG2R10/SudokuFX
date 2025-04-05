@@ -194,8 +194,8 @@ public class GameController {
 
                 informationLabel.setText("Sudoku resuelto!");
                 informationLabel.setStyle(informationLabel.getStyle() + "-fx-text-fill: #8cff00;");
-                informationLabel.setText("Bien hecho!");
-                informationLabel.setStyle(informationLabel.getStyle() + "-fx-text-fill: #8cff00;");
+                resolvabilityInformationLabel.setText("Bien hecho!");
+                resolvabilityInformationLabel.setStyle(informationLabel.getStyle() + "-fx-text-fill: #8cff00;");
                 helpButton.setText("Volver a jugar");
             }
         });
@@ -205,7 +205,7 @@ public class GameController {
     //His behaviour depends on gameWon. If gameWon is true, it'll execute the win sequence, if not, it will give a hint to the user
     @FXML
     private void handleHelp() {
-        if (!gameWon.getValue()) {
+        if (!gameWon.getValue() && resolvabilityInformationLabel.getText().isEmpty()) {
             for (int row = 0; row < sudoku.getSize(); row++) {
                 for (int col = 0; col < sudoku.getSize(); col++) {
                     if (sudoku.getPlayableSudoku().get(row).get(col) == 0) {
@@ -224,9 +224,18 @@ public class GameController {
             alert.showAndWait();
         }
 
-        //We reset the window, closing the actual one and basically cloning the code in the GameStage constructor
+        //If we haven't won yet, but the actual board is impossible to solve
+        else if(!resolvabilityInformationLabel.getText().isEmpty() && !gameWon.getValue()){
+            informationLabel.setText("No se pueden dar pistas si el tablero es imposible de resolver!");
+        }
+
+        //If we won, we reset the window, closing the actual one and basically cloning the code in the GameStage constructor
         else{
             try {
+                // Get the actual stage
+                Stage stage = (Stage) helpButton.getScene().getWindow();
+                stage.close(); // And close it
+
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/sudoku/game.fxml"));
                 Parent root = loader.load();
                 Scene scene = new Scene(root, 600, 600);

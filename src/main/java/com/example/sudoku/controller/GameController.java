@@ -33,6 +33,11 @@ public class GameController {
 
     private final ArrayList<ArrayList<TextField>> textFields = new ArrayList<>();
 
+    //This is Arias blame. Basically a priorityQueque of the wrong board positions in playable board
+    private PriorityQueue<int[]> missplacedPositions = new PriorityQueue<>(
+            (a,b) -> Integer.compare(b[2], a[2]) //THe priority is determined by the integer z in the ints (x,y,z)
+    );
+
     private final Sudoku sudoku = new Sudoku();
 
     //Boolean we'll be listening to activate the win sequence
@@ -78,7 +83,7 @@ public class GameController {
                 TextField cell = textFields.get(row).get(col);
 
                 //We save the coordinates of our textField inside it with an object property assigned with setUserData
-                cell.setUserData(new int[]{row,col});
+                cell.setUserData(new int[]{row,col, 0});
 
                 //We assign to our textField the actual number that is in the playableBoard grid.
                 cell.setText(String.valueOf(sudoku.getPlayableSudoku().get(row).get(col)));
@@ -119,52 +124,68 @@ public class GameController {
 
                 //We define the behaviour now
                 cell.textProperty().addListener((obs, oldValue, newValue) -> {
-                    if(newValue.matches("[1-6]?") && !cell.getText().isEmpty()){
+                    if(!cell.getText().isEmpty()){
                         boolean validNumber = sudoku.isValid(tfRow, tfCol, Integer.parseInt(newValue), sudoku.getPlayableSudoku());
 
                         informationLabel.setText(sudoku.getStatus());
                         sudoku.getPlayableSudoku().get(tfRow).set(tfCol, Integer.parseInt(newValue));
 
+                        int[] coordinates = (int[]) cell.getUserData();
+                        missplacedPositions.remove(coordinates);
+
                         if(validNumber){
-                            cell.setStyle("-fx-border-color: rgba(169,255,0,0.64);");
+                            //We try to solve the puzzle with the actual numbers to see if the solution the user is proposing is actually possible
+                            sudoku.getAuxiliarSudoku().clear();
+                            for (List<Integer> rowOnPlayable : sudoku.getPlayableSudoku()) {
+                                sudoku.getAuxiliarSudoku().add(new ArrayList<>(rowOnPlayable));
+                            }
+
+                            boolean isSolvable = sudoku.isSolvable(0,0);
+
+                            //We set our information label about resolvability after checking it
+                            resolvabilityInformationLabel.setText(sudoku.getResolvabilityStatus());
+
+                            //If it is not solvable, we add this
+                            if(!isSolvable){
+                                coordinates[2] = 2;
+
+                                cell.setStyle("-fx-border-color: rgba(182,0,0,0.65);");
+                                cell.setStyle(cell.getStyle() + "-fx-background-color: #770707;");
+                            }
+
+                            else {
+                                coordinates[2] = 0;
+
+                                cell.setStyle("-fx-border-color: rgba(169,255,0,0.64);");
+                                cell.setStyle(cell.getStyle() + "-fx-background-color: transparent;");
+
+                                if(sudoku.isSolved()){
+                                    gameWon.set(true);
+                                }
+                            }
                         }
 
+                        //if the number was not valid, we put the border in red and do a replacePriority change
                         else{
+                            coordinates[2] = 1; //We change the priority higher
                             cell.setStyle("-fx-border-color: rgba(182,0,0,0.65);");
                         }
 
-                        //We try to solve the puzzle with the actual numbers to see if the solution the user is proposing is actually possible
-                        sudoku.getAuxiliarSudoku().clear();
-                        for (List<Integer> rowOnPlayable : sudoku.getPlayableSudoku()) {
-                            sudoku.getAuxiliarSudoku().add(new ArrayList<>(rowOnPlayable));
-                        }
-
-                        boolean isSolvable = sudoku.isSolvable(0,0);
-
-                        if(!isSolvable){
-                            cell.setStyle(cell.getStyle() + "-fx-background-color: #770707;");
-                        }
-
-                        else {
-                            cell.setStyle(cell.getStyle() + "-fx-background-color: transparent;");
-                        }
-
-                        //We set our information label about resolvability after checking it
-                        resolvabilityInformationLabel.setText(sudoku.getResolvabilityStatus());
-
-                        //If the sudoku is solvable and the number the user gave is valid, we check if the sudoku is fully solved
-                        if(validNumber && isSolvable){
-                            if(sudoku.isSolved()){
-                                gameWon.set(true);
-                            }
+                        //We add the coordinate to missplacedPositions if it has a replacePriority higher than an empty cell
+                        if(coordinates[2] != 0) {
+                            missplacedPositions.add(coordinates);
                         }
                     }
 
-                    //If the newValue is not a valid character, that could mean the user erased their previous wrong answer, so we need to update the information labels
+                    //If the newValue is empty, we need to update the information labels and the cell
                     //and leave as default the actual cell / playableSudoku position
                     else{
                         sudoku.getPlayableSudoku().get(tfRow).set(tfCol, 0);
                         cell.setStyle("-fx-border-color: white; -fx-background-color: transparent;");
+
+                        int[] coordinates = (int[]) cell.getUserData();
+                        missplacedPositions.remove(coordinates);
+                        coordinates[2] = 0;
 
                         if (!resolvabilityInformationLabel.getText().isEmpty()) {
                             if(sudoku.isSolvable(0, 0)) resolvabilityInformationLabel.setText(sudoku.getResolvabilityStatus());
@@ -195,7 +216,7 @@ public class GameController {
                 informationLabel.setText("Sudoku resuelto!");
                 informationLabel.setStyle(informationLabel.getStyle() + "-fx-text-fill: #8cff00;");
                 resolvabilityInformationLabel.setText("Bien hecho!");
-                resolvabilityInformationLabel.setStyle(informationLabel.getStyle() + "-fx-text-fill: #8cff00;");
+                resolvabilityInformationLabel.setStyle(resolvabilityInformationLabel.getStyle() + "-fx-text-fill: #8cff00;");
                 helpButton.setText("Volver a jugar");
             }
         });
@@ -205,13 +226,27 @@ public class GameController {
     //His behaviour depends on gameWon. If gameWon is true, it'll execute the win sequence, if not, it will give a hint to the user
     @FXML
     private void handleHelp() {
-        if (!gameWon.getValue() && resolvabilityInformationLabel.getText().isEmpty()) {
-            for (int row = 0; row < sudoku.getSize(); row++) {
-                for (int col = 0; col < sudoku.getSize(); col++) {
-                    if (sudoku.getPlayableSudoku().get(row).get(col) == 0) {
-                        textFields.get(row).get(col).setText(String.valueOf(sudoku.getSolvedSudoku().get(row).get(col)));
-                        textFields.get(row).get(col).setStyle("-fx-border-color: rgba(255,255,0,0.66);");
-                        return;
+        if (!gameWon.getValue()) {
+            if(missplacedPositions.size() > 0){ //We pick from the missplaced positions to replace them
+                int[] coordinate = missplacedPositions.poll();
+                int row = coordinate[0];
+                int col = coordinate[1];
+
+                textFields.get(row).get(col).setText(Integer.toString(sudoku.getSolvedSudoku().get(row).get(col)));
+                textFields.get(row).get(col).setStyle("-fx-border-color: rgba(255,255,0,0.66); -fx-background-color: transparent;");
+
+                missplacedPositions.remove(coordinate);
+                return;
+            }
+
+            else{ //We pick from the empty positions
+                for (int row = 0; row < sudoku.getSize(); row++) {
+                    for (int col = 0; col < sudoku.getSize(); col++) {
+                        if (sudoku.getPlayableSudoku().get(row).get(col) == 0) {
+                            textFields.get(row).get(col).setText(String.valueOf(sudoku.getSolvedSudoku().get(row).get(col)));
+                            textFields.get(row).get(col).setStyle("-fx-border-color: rgba(255,255,0,0.66);");
+                            return;
+                        }
                     }
                 }
             }
@@ -224,13 +259,8 @@ public class GameController {
             alert.showAndWait();
         }
 
-        //If we haven't won yet, but the actual board is impossible to solve
-        else if(!resolvabilityInformationLabel.getText().isEmpty() && !gameWon.getValue()){
-            informationLabel.setText("No se pueden dar pistas si el tablero es imposible de resolver!");
-        }
-
         //If we won, we reset the window, closing the actual one and basically cloning the code in the GameStage constructor
-        else{
+        else {
             try {
                 // Get the actual stage
                 Stage stage = (Stage) helpButton.getScene().getWindow();

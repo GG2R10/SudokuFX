@@ -158,7 +158,7 @@ public class Sudoku {
     //So it is required to specify which one of the boards (board or playableBoard) is going to be used
     public boolean isValid(int row, int col, int num, ArrayList<ArrayList<Integer>> boardToCheck) {
         // Check row. Self-explanatory
-        if (boardToCheck.get(row).contains(num)){
+        if (boardToCheck.get(row).contains( num)){
             status = "Mismo numero (" + String.valueOf(num) + ") en la fila!";
             return false;
         }

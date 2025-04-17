@@ -24,8 +24,6 @@ public class Animation extends AnimationAdapter{
      * @param durationSeconds the duration of one transition cycle in seconds.
      * @param fromOpacity the starting opacity value.
      * @param toOpacity the ending opacity value.
-     * @author YourName
-     * @version 1.0
      */
     public static void opacityPulse(Node node, double durationSeconds, double fromOpacity, double toOpacity) {
         FadeTransition fade = new FadeTransition(Duration.seconds(durationSeconds), node);

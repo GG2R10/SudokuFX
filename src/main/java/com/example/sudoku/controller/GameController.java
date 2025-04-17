@@ -56,8 +56,6 @@ public class GameController {
      * Initializes the game controller by generating a new Sudoku puzzle, building the grid of text fields,
      * configuring their formatting and behavior, applying animations, and setting up the win condition listener.
      *
-     * @author YourName
-     * @version 1.0
      */
     @FXML
     public void initialize() {
@@ -200,8 +198,8 @@ public class GameController {
      * and help button text are updated to indicate success.
      * </p>
      *
-     * @author YourName
-     * @version 1.0
+     * @author Sebastian Calvo
+     * @version 1.2.5
      */
     private void listenToWin() {
         gameWon.addListener((observable, oldValue, newValue) -> {
@@ -229,8 +227,8 @@ public class GameController {
      * it displays an informational alert. If the game is already won, it resets the game by closing the current stage and loading a new one.
      * </p>
      *
-     * @author YourName
-     * @version 1.0
+     * @author Sebastian Calvo
+     * @version 1.3
      */
     @FXML
     private void handleHelp() {

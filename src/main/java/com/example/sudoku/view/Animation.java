@@ -11,7 +11,7 @@ import javafx.scene.Node;
  * Currently, it offers methods for an infinite opacity pulse animation on a Node and a stub for showing and hiding a label.
  * </p>
  */
-public class Animation {
+public class Animation extends AnimationAdapter{
 
     /**
      * Performs an infinite opacity pulse animation on the provided {@code Node}.

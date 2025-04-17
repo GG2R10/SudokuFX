@@ -29,7 +29,7 @@ public class AnimationAdapter {
      * @param toOpacity the maximum opacity value.
      */
     public void applyPulseEffect(Node node, double durationSeconds, double fromOpacity, double toOpacity) {
-        Animation.opacityPulse(node, durationSeconds, fromOpacity, toOpacity);
+
     }
 
     /**
@@ -43,6 +43,6 @@ public class AnimationAdapter {
      * @param text the message text to display.
      */
     public void displayTemporaryMessage(Label label, String text) {
-        Animation.showAndHide(label, text);
+
     }
 }
